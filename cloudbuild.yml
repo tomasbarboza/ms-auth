@@ -16,3 +16,5 @@ steps:
         "push",
         "southamerica-west1-docker.pkg.dev/tienda-microservices-429001/image-registry/auth-ms",
       ]
+options:
+  logging: CLOUD_LOGGING_ONLY
