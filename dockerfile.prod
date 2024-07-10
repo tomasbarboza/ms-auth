@@ -1,0 +1,57 @@
+# Dependencies
+FROM node:21-alpine3.19 as deps
+
+# Create app directory
+WORKDIR /usr/src/app
+
+# Install app dependencies
+COPY package*.json ./
+COPY yarn.lock ./ 
+RUN yarn install
+
+# Builder
+FROM node:21-alpine3.19 as build
+
+WORKDIR /usr/src/app
+
+## Copying node_modules from the previous stage
+
+COPY --from=deps /usr/src/app/node_modules ./node_modules
+
+# Copying the source code
+COPY . .
+
+# # Run tests 
+# RUN yarn test
+
+## Build the app
+RUN yarn build
+
+## Remove dev dependencies
+RUN yarn install --immutable --immutable-cache --check-cache && yarn cache clean
+
+RUN npx prisma generate
+
+
+# Image
+FROM node:21-alpine3.19 as prod
+
+WORKDIR /usr/src/app
+
+# Copying node_modules from the previous stage
+COPY --from=build /usr/src/app/node_modules ./node_modules
+
+# Copying the source code
+COPY --from=build /usr/src/app/dist ./dist
+
+# SET NODE ENV TO PRODUCTION
+ENV NODE_ENV=production
+
+# Use a non-root user
+USER node
+
+# Expose the port the app runs in
+EXPOSE 3000
+
+# Serve the app
+CMD ["node", "dist/main.js"]

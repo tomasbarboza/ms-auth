@@ -64,7 +64,6 @@ export class AuthService extends PrismaClient implements OnModuleInit {
 
   async register(createUserDto: CreateUserDto) {
     const { username, password, email } = createUserDto;
-    console.log('Unhashed password: ', password);
 
     try {
       const user = await this.user.findUnique({
